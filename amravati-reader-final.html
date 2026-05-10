@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Amravati Chronicles</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Lora:ital@0;1&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0E0C15;
+    --surface: #16131F;
+    --surface2: #1E1A2E;
+    --border: rgba(255,255,255,0.07);
+    --gold: #C9A84C;
+    --gold-dim: rgba(201,168,76,0.15);
+    --text: #E8E2D5;
+    --text-dim: #8A8098;
+    --red: #8B2020;
+    --locked: #2A2535;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* COVER */
+  #cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 0 40px;
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(139,32,32,0.28) 0%, transparent 65%),
+      radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.08) 0%, transparent 50%),
+      var(--bg);
+  }
+  .cover-art {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 58vh;
+    background:
+      linear-gradient(180deg, transparent 50%, var(--bg) 100%),
+      radial-gradient(ellipse at 50% 40%, rgba(139,32,32,0.4) 0%, rgba(14,12,21,0.92) 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .cover-symbol { font-size: 110px; opacity: 0.1; filter: sepia(1); user-select: none; }
+  .cover-badge {
+    position: absolute; top: 20px; right: 20px;
+    background: var(--gold-dim); border: 1px solid var(--gold);
+    color: var(--gold); font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+  }
+  .cover-content { position: relative; text-align: center; padding: 0 24px; width: 100%; }
+  .cover-series { font-size: 11px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; }
+  .cover-title {
+    font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700;
+    line-height: 1.1; margin-bottom: 6px; color: #F0EAD8;
+  }
+  .cover-subtitle { font-family: 'Lora', serif; font-style: italic; color: var(--gold); font-size: 15px; margin-bottom: 6px; }
+  .cover-author { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 28px; }
+  .cover-divider { width: 40px; height: 1px; background: var(--gold); margin: 0 auto 24px; opacity: 0.4; }
+  .cover-desc { font-family: 'Lora', serif; font-size: 14px; line-height: 1.75; color: var(--text-dim); margin-bottom: 32px; max-width: 300px; margin-left: auto; margin-right: auto; }
+  .btn-primary {
+    background: linear-gradient(135deg, #8B2020, #C0392B); color: #F0EAD8;
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+    letter-spacing: 1px; border: none; border-radius: 12px;
+    padding: 14px 40px; cursor: pointer; width: 100%; max-width: 280px; transition: opacity 0.2s;
+  }
+  .btn-primary:active { opacity: 0.8; }
+
+  /* CHAPTERS */
+  #chapters { display: none; padding: 0 0 40px; }
+  .screen-header {
+    padding: 20px 20px 0; display: flex; align-items: center;
+    gap: 12px; margin-bottom: 20px;
+  }
+  .back-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); width: 36px; height: 36px; border-radius: 10px;
+    font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .screen-title { font-family: 'Playfair Display', serif; font-size: 20px; color: #F0EAD8; }
+  .progress-bar-wrap { margin: 0 20px 10px; background: var(--surface2); border-radius: 20px; height: 4px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--red), var(--gold)); border-radius: 20px; transition: width 0.4s ease; }
+  .progress-label { margin: 0 20px 20px; font-size: 11px; color: var(--text-dim); }
+  .chapter-list { padding: 0 16px; display: flex; flex-direction: column; gap: 8px; }
+  .chapter-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 14px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface); transition: background 0.15s;
+  }
+  .chapter-item:active { background: var(--surface2); }
+  .chapter-item.locked { background: var(--locked); cursor: default; opacity: 0.72; }
+  .chapter-item.locked:active { background: var(--locked); }
+  .chapter-num { font-size: 11px; color: var(--gold); font-weight: 500; letter-spacing: 1px; min-width: 28px; text-align: center; }
+  .chapter-info { flex: 1; }
+  .chapter-name { font-family: 'Lora', serif; font-size: 15px; color: var(--text); margin-bottom: 3px; }
+  .chapter-meta { font-size: 11px; color: var(--text-dim); }
+  .free-tag { font-size: 10px; background: rgba(139,32,32,0.25); color: #E07070; border: 1px solid rgba(139,32,32,0.4); border-radius: 6px; padding: 2px 6px; }
+  .ton-tag { font-size: 10px; background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); border-radius: 6px; padding: 2px 6px; }
+
+  /* READER */
+  #reader { display: none; padding-bottom: 60px; }
+  .reader-header {
+    padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border); position: sticky; top: 0;
+    background: rgba(14,12,21,0.93); backdrop-filter: blur(10px); z-index: 10;
+  }
+  .reader-title { font-size: 14px; color: var(--text-dim); flex: 1; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+  .reader-body { padding: 28px 22px; }
+  .chapter-heading { font-size: 11px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; margin-bottom: 10px; }
+  .chapter-title-big { font-family: 'Playfair Display', serif; font-size: 26px; line-height: 1.2; color: #F0EAD8; margin-bottom: 24px; }
+  .chapter-divider { width: 32px; height: 2px; background: var(--red); margin-bottom: 28px; border-radius: 2px; }
+  .chapter-text { font-family: 'Lora', serif; font-size: 16px; line-height: 1.9; color: #D8D0C4; }
+  .chapter-text p { margin-bottom: 20px; }
+  .chapter-text em { color: #C9A84C; font-style: italic; }
+  .chapter-text .scene-break { display: block; font-family: 'Playfair Display', serif; font-size: 12px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin: 24px 0 14px; border-left: 2px solid var(--red); padding-left: 10px; }
+  .nav-row { display: flex; gap: 10px; padding: 20px; border-top: 1px solid var(--border); margin-top: 10px; }
+  .btn-nav { flex: 1; padding: 13px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; cursor: pointer; transition: background 0.15s; font-family: 'Inter', sans-serif; }
+  .btn-nav:active { background: var(--surface2); }
+  .btn-nav.next-btn { background: linear-gradient(135deg, #8B2020, #C0392B); border-color: transparent; font-weight: 500; color: #F0EAD8; }
+
+  /* LOCKED */
+  #locked-screen {
+    display: none; min-height: 100vh; align-items: center; justify-content: center;
+    flex-direction: column; padding: 40px 28px; text-align: center;
+    background: radial-gradient(ellipse at 50% 40%, rgba(201,168,76,0.06) 0%, transparent 60%), var(--bg);
+  }
+  .lock-icon { font-size: 52px; margin-bottom: 20px; opacity: 0.6; }
+  .lock-title { font-family: 'Playfair Display', serif; font-size: 24px; color: #F0EAD8; margin-bottom: 10px; }
+  .lock-desc { font-size: 14px; color: var(--text-dim); line-height: 1.7; margin-bottom: 28px; max-width: 280px; }
+  .ton-price { font-size: 28px; font-weight: 700; color: var(--gold); font-family: 'Playfair Display', serif; margin-bottom: 6px; }
+  .ton-price-sub { font-size: 12px; color: var(--text-dim); margin-bottom: 28px; }
+  .btn-ton { background: linear-gradient(135deg, #C9A84C, #8B6914); color: #0E0C15; font-weight: 600; font-size: 14px; border: none; border-radius: 12px; padding: 15px 32px; cursor: pointer; width: 100%; max-width: 280px; letter-spacing: 0.5px; transition: opacity 0.2s; }
+  .btn-ton:active { opacity: 0.85; }
+  .btn-back-lock { margin-top: 14px; background: transparent; border: 1px solid var(--border); color: var(--text-dim); font-size: 13px; border-radius: 12px; padding: 12px 28px; cursor: pointer; width: 100%; max-width: 280px; }
+  .coming-soon-note { margin-top: 16px; font-size: 11px; color: var(--text-dim); font-style: italic; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div id="cover">
+  <div class="cover-art">
+    <div class="cover-symbol">🪔</div>
+    <div class="cover-badge">Book One</div>
+  </div>
+  <div class="cover-content">
+    <div class="cover-series">Amravati Chronicles</div>
+    <h1 class="cover-title">The Last<br/>Gift</h1>
+    <div class="cover-subtitle">A Crime Thriller</div>
+    <div class="cover-author">by Gaurav Subhash</div>
+    <div class="cover-divider"></div>
+    <p class="cover-desc">
+      Some truths are buried for a reason.<br/>
+      But truth has a way of bleeding through.
+    </p>
+    <button class="btn-primary" onclick="showChapters()">Begin Reading →</button>
+  </div>
+</div>
+
+<!-- CHAPTERS -->
+<div id="chapters">
+  <div class="screen-header">
+    <button class="back-btn" onclick="showCover()">←</button>
+    <span class="screen-title">Contents</span>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar"></div></div>
+  <p class="progress-label" id="progressLabel"></p>
+  <div class="chapter-list" id="chapterList"></div>
+</div>
+
+<!-- READER -->
+<div id="reader">
+  <div class="reader-header">
+    <button class="back-btn" onclick="showChapters()">←</button>
+    <span class="reader-title" id="readerHeaderTitle"></span>
+  </div>
+  <div class="reader-body">
+    <div class="chapter-heading" id="readerChapterNum"></div>
+    <div class="chapter-title-big" id="readerChapterTitle"></div>
+    <div class="chapter-divider"></div>
+    <div class="chapter-text" id="readerContent"></div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-nav" id="prevBtn" onclick="navigate(-1)">← Prev</button>
+    <button class="btn-nav next-btn" id="nextBtn" onclick="navigate(1)">Next →</button>
+  </div>
+</div>
+
+<!-- LOCKED -->
+<div id="locked-screen">
+  <div class="lock-icon">🔐</div>
+  <h2 class="lock-title">Premium Chapter</h2>
+  <p class="lock-desc" id="lockDesc">Unlock this chapter to continue the story.</p>
+  <div class="ton-price">0.5 TON</div>
+  <div class="ton-price-sub">≈ ₹150 · per chapter &nbsp;|&nbsp; 3 TON for full book</div>
+  <button class="btn-ton" onclick="handleTonPay()">💎 Unlock with TON</button>
+  <button class="btn-back-lock" onclick="showChapters()">← Back to Contents</button>
+  <p class="coming-soon-note">TON payments activating soon · Follow @amravatichronicles_bot</p>
+</div>
+
+<script>
+const CHAPTERS = [
+  {
+    id: 0,
+    num: "Prologue",
+    title: "Before the First Body",
+    free: true,
+    words: "~450 words",
+    content: `
+      <span class="scene-break">Amravati, Maharashtra</span>
+      <p>A city of contradictions. Where rickshaw horns echoed beneath ancient temple bells, and cellphone chatter floated alongside chants from Ambadevi Mandir. Where old poets sipped cutting chai beside social media influencers. And where, on most nights, chaos and calm danced without ever stepping on each other's toes.</p>
+      <p>But this night — was not most nights.</p>
+      <span class="scene-break">1:13 A.M. | Back Alleys of Itwari Lane</span>
+      <p>Moonlight sliced through the narrow lanes like cold silver. Street dogs stirred from garbage sacks. Neon signs blinked above shuttered stalls. And footsteps — fast, uneven — echoed against damp walls.</p>
+      <p>The man ran barefoot.</p>
+      <p>Panting. Bleeding. His right hand clutched something — a folded envelope, stained at one corner. His phone was gone. His hope, thinning.</p>
+      <p>He looked over his shoulder. Nothing. Only shadows.</p>
+      <p>But shadows in Amravati had teeth.</p>
+      <p>He ducked behind an iron gate, heart pounding. Somewhere above, a baby cried. A television flickered blue against cracked windows. A deity's poster peeled slowly from a wall — <em>Ganpati Bappa Morya</em> — watching.</p>
+      <p>Then — a whisper. Not a voice. A rustle. A presence.</p>
+      <p>He spun around.</p>
+      <p>The knife caught the edge of his collarbone first — then sank deeper. The envelope dropped. His gasp vanished with his breath. He crumpled to the ground, blood blooming beneath him like a secret finally told.</p>
+      <p>The killer stood over him only a moment, then melted into the night — leaving behind silence… and the scent of rust.</p>
+      <p>But what the killer didn't know…</p>
+      <p>…was that someone else had been watching.</p>
+      <p>Just beyond the alley's edge — hidden in the warm glow of a half-lit shop called <em>Memories &amp; Mithai</em> — a man stood frozen. Bag in hand. Keys in the lock. Eyes wide. Breath still.</p>
+      <p>He had seen everything.</p>
+      <p>And nothing in Gopal Agrawal's quiet life would ever be the same again.</p>
+    `
+  },
+  {
+    id: 1,
+    num: "Chapter 1",
+    title: "The Gift Shop Owner",
+    free: true,
+    words: "~900 words",
+    content: `
+      <span class="scene-break">Chhatri Square at Dusk</span>
+      <p>The sun dipped behind the domed chhatris of Amravati, painting the sky in hues of burnt orange and violet. By day, Chhatri Square thrived — a symphony of haggling vendors, clanging temple bells, and the sweet tang of jalebi frying in ghee. But as twilight fell, the square retreated into shadows, its alleyways narrowing into veins of silence. Gopal Agrawal lingered at the threshold of Memories &amp; Mithai, his gift shop nestled between a sari boutique and a chai stall. He inhaled the evening air, thick with the musk of marigolds and the faint echo of a street musician's flute.</p>
+      <p>"Another late night, Gopu Kaka?" called Ramesh, the chaiwala, as he shuttered his stall.</p>
+      <p>Gopal smiled, his round cheeks creasing. "Diwali orders," he said, tapping the stack of hand-painted diyas by the door. "The world runs on sweets and memories, no?"</p>
+      <span class="scene-break">The Heart of Memories &amp; Mithai</span>
+      <p>Inside, the shop glowed like a lantern. Shelves bowed under the weight of Amravati's stories: stacks of turmeric-stained notebooks, rosewood figurines of local deities, and glass jars of mithai that gleamed like amber. A faded poster of Amitabh Bachchan from <em>Sholay</em> watched over the counter, a relic from Gopal's youth. Regulars joked that the shop was a museum of the Agrawal family's heartbeat — every item curated by his late wife, every sweet recipe inherited from his mother.</p>
+      <p>He hummed an old Kishore Kumar tune as he wrapped a peacock-themed diya set for young Meera's wedding. His fingers, calloused from decades of work, moved deftly. Outside, a stray dog barked. Gopal paused, eyeing the alley through the grimy window. A black Mercedes glinted under the flickering streetlamp — unfamiliar, out of place.</p>
+      <span class="scene-break">The Friend Group</span>
+      <p>The bell above the door jingled.</p>
+      <p>"Still here? You'll turn into a diya yourself," drawled Vidhit Deshmukh, his crisp kurta slightly crumpled from a long day at court, as he strode in. Behind him trailed Akshay Patil, his scrubs smudged with dried blood, and Priyanshu "Parchi" Rao, clutching a crumpled newspaper.</p>
+      <p>"Says the man who bills clients for midnight panic calls," Parchi retorted, collapsing into the wicker chair by the counter. His camera dangled from his neck like a noose.</p>
+      <p>Akshay reached for a piece of rose barfi. "Three stab wounds today. One man kept begging for his mother while I stitched him." He popped the sweet into his mouth, chewing slowly. "Your mithai's better than morphine, Gopal."</p>
+      <p>Pradnya Rao entered last, her yoga mat slung over one shoulder. She pressed a jar of turmeric latte into Gopal's hands. "You're pale. Sleeping?"</p>
+      <p>"Who needs sleep when I have your nagging?" Gopal laughed, but his fingers trembled as he poured chai.</p>
+      <span class="scene-break">The Unraveling</span>
+      <p>By 10 p.m., the friends had dispersed. Gopal lingered, sorting last-minute orders. The neon "Open" sign buzzed overhead, casting jagged shadows. A clatter echoed from the alley — glass breaking? Street dogs again, he thought, grabbing a broom.</p>
+      <p>He stepped outside. The Mercedes was gone.</p>
+      <p>A gurgling cry split the silence.</p>
+      <p>Gopal froze. At the alley's mouth, a young man in a torn kurta staggered, clutching his stomach. Blood seeped through his fingers, black as oil in the moonlight. Behind him stood a figure in a tailored suit, face obscured by shadow. The killer wiped his blade on a handkerchief — methodical, unhurried.</p>
+      <p>Their eyes met. A scar — jagged, wormlike — curved across the killer's wrist.</p>
+      <p>Gopal's broom clattered to the ground.</p>
+      <p>The killer tilted his head, almost amused. "Run," he murmured, his voice silk over steel.</p>
+      <span class="scene-break">Flight</span>
+      <p>Gopal's legs moved before his mind could. He careened through labyrinthine lanes, the killer's laughter chasing him like a stray bullet. His lungs burned. His shop keys dug into his palm, sharp as teeth.</p>
+      <p>At home, he double-locked the door, sweat dripping onto the bloodied scrap of cloth clutched in his fist — the victim's kurta, torn free in his panic.</p>
+      <p><em>Call the police,</em> his conscience hissed. <em>They'll find you first,</em> fear replied.</p>
+      <p>Outside his window, a cigarette ember glowed in the dark. A man in a suit flicked it aside and texted briskly.</p>
+      <p>On Gopal's phone, Parchi's latest headline blinked: <em>Local Activist Missing: Land Scandal Suspected.</em></p>
+      <span class="scene-break">The Watcher</span>
+      <p>The killer lit another cigarette, his scar pulsing faintly under the moonlight.</p>
+      <p>Message sent: 11:03 p.m.</p>
+      <p><em>Cleanup required. A shopkeeper saw.</em></p>
+    `
+  },
+  {
+    id: 2,
+    num: "Chapter 2",
+    title: "The Aftermath",
+    free: true,
+    words: "~1,400 words",
+    content: `
+      <p>A brittle silence hung in the air, so dense it smothered even the hum of streetlamps outside Gopal's home. He didn't move from behind the curtain. That ember — the cigarette — had vanished, replaced by a cold trail of smoke drifting like a ghost across his windowpane.</p>
+      <p>He knew he had been watched. And worse — acknowledged.</p>
+      <p>The image of that scar — wormlike and pink across the wrist — refused to leave his mind. He closed his eyes, but the blood-soaked kurta fragment in his trembling hand grounded him to the horror. It was real. The man in the alley had really died.</p>
+      <p>At sunrise, Gopal stood before the Amravati Police Station, the kurta wrapped inside a plastic grocery bag. His palms were clammy. The orange dome of the station glistened under the morning dew, but inside, the place pulsed with apathy.</p>
+      <p>"Report a theft, uncle?" asked a yawning constable near the gate, scribbling lazily into a dog-eared register.</p>
+      <p>"I saw a man get murdered," Gopal said flatly. That got his attention.</p>
+      <p>Five minutes later, Gopal sat before Inspector Ajay Rane, a stocky man with eyes dulled from too many night shifts and too few convictions. His desk was chaos — empty chai cups, unpaid traffic fines, and a cricket commentary crackling from a radio in the background.</p>
+      <p>"Gift shop owner, right?" Rane asked, skimming the complaint. "Memories &amp; Mithai?"</p>
+      <p>"Yes."</p>
+      <p>Rane leaned back in his creaky chair. "No body was found in the alley. No blood. No knife. The CCTV has been dead since last week — municipal laziness. Nothing in your story adds up, baba."</p>
+      <p>"But I saw it! I heard the man scream. There was blood — look at this!" Gopal thrust the blood-stained kurta forward.</p>
+      <p>Rane squinted at it, unimpressed. "Could be goat blood from the butcher lane. Could be your mithai dye. Could be street drama for all I know. Where's the corpse, eh? Did it vanish into mithai?"</p>
+      <p>"I'm not making this up."</p>
+      <p>Rane's tone changed subtly — less amused, more surgical. "You say the killer saw you. Recognized you. Why did he let you live?"</p>
+      <p>That question sat like stone in the room. "I… ran."</p>
+      <p>Rane chuckled. "Tell you what, uncle. Maybe it felt real. You work late, get tired, hallucinate a bit — next thing you know, you're starring in your own CID episode. Go home. Drink water. Forget this fantasy."</p>
+      <p>"No!" Gopal stood up. "This isn't a dream. Someone is — "</p>
+      <p>The inspector's palm slammed on the table. "Then get me proof! Not a kurta and a chai-drenched imagination."</p>
+      <p>Gopal left with the weight of his fear and zero police backing.</p>
+      <p>By the time he reached the shop, the shutters were halfway open. His heart seized. He never left them that way.</p>
+      <p>The inside looked almost untouched. Until he saw the display case of hand-painted diyas — smashed. Glass crunched under his chappals. Mithai jars lay shattered, syrup pooling on the floor. The faint scent of rose and betrayal.</p>
+      <p>But it was the mirror by the cash counter that held him still.</p>
+      <p>Spray-painted in jagged red letters: <em>"FORGET WHAT YOU SAW."</em></p>
+      <p>His breath caught. His knees buckled onto the sticky floor. He stared, unable to look away. <em>They know who I am. They know where I live. They know where I work.</em> He was never safe — not last night, not now.</p>
+      <span class="scene-break">Later that evening — Café Tandoor Junction</span>
+      <p>"I told you to lie low!" Parchi hissed, his leather jacket smelling of ink and stress. "You went to the cops?"</p>
+      <p>"I had to," Gopal muttered, stirring his untouched masala chai. "They laughed at me."</p>
+      <p>Pradnya squeezed his arm gently. "You look like you haven't slept in days. Come to my class tomorrow — "</p>
+      <p>"This isn't a backache, Pradnya!" Gopal snapped. "Someone wrote on my mirror. They were in my shop!"</p>
+      <p>"Wait — inside?" Akshay sat up straight, his calm doctor's voice suddenly urgent.</p>
+      <p>"Yes. They knew where I worked. They broke in."</p>
+      <p>Vidhit leaned forward, brows tight. "What did the police say?"</p>
+      <p>"They think I'm delusional."</p>
+      <p>Parchi pulled out his phone. "Show me the writing." Gopal hesitated, then handed over the photo. Parchi stared at it for a long time. His journalist's eye missed nothing. "It's not random graffiti," he said finally. "The strokes… they're methodical. Uniform pressure. Not some kid. This was a calculated message."</p>
+      <p>Vidhit's voice dipped low. "Someone's cleaning up fast. If there's no body and no blood, then they have power. Connections."</p>
+      <p>"Builder lobby?" Akshay guessed. "Land mafia?"</p>
+      <p>"I wrote a story two weeks ago," Parchi murmured. "About a missing activist — Ravindra Kale. He accused corrupt Corporator Dandekar of seizing land near Chhatri Square. The alley you mentioned… it's right behind the disputed lot."</p>
+      <p>They all turned to Gopal at once. "You saw Kale die, didn't you?" Gopal nodded slowly.</p>
+      <p>The circle of friends grew still. Then, Parchi's phone pinged. He turned it around. A photo. Low resolution, grainy. Gopal. In the alley. Standing, panicked. Circled in red ink.</p>
+      <p>"Who sent this?" Akshay asked. "No number. Just… sent."</p>
+      <p>Vidhit swore under his breath. Parchi stared at the screen, dread rising like bile. "They're not just watching us. They're playing with us."</p>
+      <p>Outside, the café lights flickered as a black SUV rolled slowly past the window. The engine hummed like a whisper. And in the front seat, just visible through the tinted glass —</p>
+      <p><em>A scarred wrist.</em></p>
+      <p>Outside the café, the SUV paused just long enough for tension to steep like cutting chai. Gopal leaned slightly to one side, trying to get a clearer view — but the darkened glass remained a mirror, showing only his pale, frightened reflection.</p>
+      <p>"Aaila… toh SUV itka low-speed ne ka gela?" muttered Parchi under his breath. <em>("Damn… why did that SUV crawl past so slowly?")</em></p>
+      <p>Pradnya was the first to break the silence. "Enough. We're leaving separately. Akshay, you drop Gopal. I'll go with Parchi. And Vidhit — call your driver."</p>
+      <p>"I don't use drivers anymore," Vidhit said, pulling out a compact taser. "I carry Shivani now." He patted it lovingly. "Best client gift ever."</p>
+      <p>Gopal managed a weak smile. "Next Diwali, remind me to stock tasers."</p>
+      <p>Inside Akshay's Swift Dzire, the air smelled of Dettol and sandalwood.</p>
+      <p>"Your blood pressure is definitely up," Akshay muttered, stealing glances at Gopal, who sat gripping the kurta cloth like it was divine prasad.</p>
+      <p>"Mi kharach baghitla hota, Akshay…" Gopal murmured. <em>("I really saw it, Akshay…")</em></p>
+      <p>Akshay parked outside Gopal's building at Rajkamal Nagar, engine humming. "I think your brain saw something it can't process. But whether it's real or not — your fear is real. That matters."</p>
+      <p>Gopal opened the door, then paused. "If I die… tell them I was sane."</p>
+      <p>"Shut up," Akshay snapped, voice brittle. "Tu punha bolshil asa tar mi tula sedative dyaeen." <em>("Say that again and I'll inject you with a sedative.")</em></p>
+      <p>They both smirked — but their eyes didn't.</p>
+      <p>That night, Gopal couldn't sleep. Every rickshaw horn outside made him twitch. He finally got up and brewed some lemongrass chai on the stove, the same one his late wife used to say cured everything except politics and pimples.</p>
+      <p>The landline buzzed. "Hello?" he whispered. Static. Then, a voice — low, muffled, male. "Gopal Agrawal?" He froze. "Who is this?"</p>
+      <p>"You should have stayed silent. Tu bagh, tuzya shopla punha baghtos ka nahi te." <em>("Let's see if you ever see your shop again.")</em></p>
+      <p>Click. The line went dead.</p>
+      <p>Just then, a knock. Three slow taps at the front door. He grabbed the cricket bat near his mandir shelf and crept forward. "Kon ahe?" <em>("Who's there?")</em></p>
+      <p>Silence. He opened the door a crack — no one. Only a folded newspaper on the floor. Last week's edition, circled in black marker: <em>ACTIVIST STILL MISSING – LAND SCANDAL GROWS.</em></p>
+      <p>Gopal bent to pick it up — and felt something under the paper. A USB stick. Plain. Silver. No label.</p>
+      <p>He plugged it into his old HP laptop. A single file. No name. Just <em>Footage_1.</em> He clicked.</p>
+      <p>It was the alley. The same one behind his shop. The video had no sound. But the visuals were unmistakable. Ravindra Kale stumbled forward. Bleeding. Behind him — the suited killer. Scar visible. But this time, the video didn't end with Kale's death.</p>
+      <p>Another figure walked into frame. And shook the killer's hand.</p>
+      <p>Someone Gopal knew. Someone who had eaten mithai in his shop.</p>
+      <p>The laptop screen flickered. In the dim light of his living room, Gopal stared — eyes dry and wide, unblinking. The killer's blade gleamed faintly. But it wasn't the scarred man that stole Gopal's breath.</p>
+      <p>It was the man beside him. Wearing a crisp linen shirt, sleeves rolled, shaking hands with the killer like old colleagues — <em>Dr. Akshay Patil.</em></p>
+      <p>"Akshay…" Gopal whispered, voice breaking into dust.</p>
+      <p>The video timestamp read October 3, 22:37 — the very night Kale died. But… Akshay had said he was in surgery.</p>
+      <p>A pressure closed around Gopal's lungs. Not his Akshay. Not the man who handed him barfi after stitching bleeding strangers.</p>
+      <p>He shut the laptop. He had to be sure.</p>
+    `
+  },
+  {
+    id: 3,
+    num: "Chapter 3",
+    title: "Friends Unite",
+    free: false,
+    words: "~900 words",
+    content: `
+      <p>The tin shutter of Pradnya's yoga studio rattled as Gopal knocked three times in rapid succession. It was just past 5 a.m., the streets still in the half-silence that came before Amravati's temples rang their morning bells.</p>
+      <p>Inside, incense coiled through the air, mixing with the earthy scent of sandalwood mats and lemongrass spray. Pradnya opened the door in leggings and a shawl, her face sharp with worry.</p>
+      <p>"You're early," she whispered. "I'm alive," he replied.</p>
+      <p>They all sat on the polished wood floor beneath the framed photo of B. K. S. Iyengar, in a half-circle that felt more like a war council than a wellness class.</p>
+      <p>Gopal pulled out the black file, the USB, and the bloodied kurta cloth. "They tried to kill me," he said. "Meera too."</p>
+      <p>"Inspector Rane is involved," Meera whispered. "He had a gun."</p>
+      <p>Parchi leaned back. "They're scrambling. That means they're scared."</p>
+      <p>"No," Gopal said. "It means they're organized."</p>
+      <p>Pradnya stood. "Enough waiting. We fight with what we have. No one else will." She unrolled a long sheet of tracing paper, hand-drawn with connecting names, dates, and locations. "I've been listening. My students talk. I started mapping two months ago when Kale went missing."</p>
+      <p>At the center was the <em>Purnamai Mall Project</em> — circled in thick red. Branches fanned outward: Kale; two dead RTI activists from Warud; a missing corporator's clerk; Dr. Akshay Patil.</p>
+      <p>Gopal's eyes landed on that last name. "You knew?" Pradnya nodded slowly. "I saw him at Yogashakti Retreat. With one of Dandekar's aides. I didn't want to believe it either."</p>
+      <p>"I wasn't part of this," Akshay said quickly. "I didn't sign off on anything illegal."</p>
+      <p>Vidhit spoke calmly. "But you witnessed the permits, Akshay. And your signature is on Kale's land reassignment."</p>
+      <p>"I was told it was routine. For a trauma center, not a mall."</p>
+      <p>Parchi's phone buzzed. "Bad news. That body in the morgue — the one we thought was Kale? It's not. They cremated the body without a post-mortem. My contact in the morgue said the tattoos didn't match. And the teeth? Wrong."</p>
+      <p>"Then Kale could still be alive?" Pradnya asked.</p>
+      <p>"Or they're keeping him somewhere," Vidhit said.</p>
+      <p>Gopal looked around the room — his unlikely army of a lawyer, a doctor, a reporter, and a yoga teacher. The people he'd shared mithai with. The people he might now have to die beside.</p>
+    `
+  },
+  {
+    id: 4,
+    num: "Chapter 4",
+    title: "Unraveling the Conspiracy",
+    free: false,
+    words: "~900 words",
+    content: `
+      <p>The rain came early that morning — light but unrelenting. Gopal sat motionless on Vidhit's couch, clutching a ceramic mug that had gone cold long ago.</p>
+      <p>"Arjun Khanna," Akshay said softly, reading from the file. "Not Kale. That's who died in the alley." He paused. "He was an RTI activist. Filed multiple petitions against illegal land use, including a transfer case under Purnamai Infra… directly linked to — " He paused again.</p>
+      <p>Gopal looked up. "Say it."</p>
+      <p>"MLA Suresh Bhende."</p>
+      <p>The name hit the room like a dropped bomb. Bhende wasn't just any politician. He was the kind whose banners flapped on every chowk — the kind whose men made phone calls before the cops even dared to act.</p>
+      <p>"Also linked to three land clearances in tribal zones," Akshay added. "And one dead RTI activist."</p>
+      <p>"No," Parchi corrected. "At least two. The other was a clerk named Avinash More. Died in a 'fire' in Shegaon. Arjun wrote about him on his blog." He read aloud: <em>"When you shine light on a building too long, the builders switch off the power. #PurnamaiTruth"</em></p>
+      <p>Vidhit spoke quietly. "If Arjun's death was meant to be seen as Kale's disappearance… then someone switched the identities intentionally."</p>
+      <p>Later that day at Memories &amp; Mithai, Gopal found a sealed courier box inside the shuttered door. Inside was a small, severed doll from his own shop — head missing, red paint smeared across its dress. And a photo of his family from last year's Ganesh Tekdi fair. On the back, scrawled in Marathi:</p>
+      <p><em>"tumhi chukichya ladhait aahat." — You are in the wrong fight.</em></p>
+      <p>Gopal dropped the photo. His palms had gone cold.</p>
+      <p>"This doll is from my shop," he whispered that night at Vidhit's apartment. "This is personal. Not a warning. A message."</p>
+      <p>Gopal got up slowly. His eyes weren't afraid anymore — just clear. "We bring them down," he said. "For Arjun. For Kale. For the city."</p>
+    `
+  },
+  {
+    id: 5,
+    num: "Chapter 5",
+    title: "Medical Clues",
+    free: false,
+    words: "~1,000 words",
+    content: `
+      <p>The fluorescent lights in Irwin Hospital's pathology lab hummed overhead as Akshay scrolled through high-resolution autopsy photos on a terminal he technically wasn't allowed to access.</p>
+      <p>Each image showed the late Arjun Khanna from different angles. Knife wounds, yes — but Akshay's trained eye spotted what others wouldn't: deep bruising near the lower sternum, internal hemorrhaging around the spleen, and a faint violet discoloration on the fingertips.</p>
+      <p>"This isn't a stabbing," he murmured.</p>
+      <p>He zoomed in. There were no defensive wounds on Arjun's palms. Arjun had been incapacitated before the knife ever touched him. One compound kept reappearing under 'unidentified anomalies': <em>NBX-9.</em></p>
+      <p>When he accessed an old toxicology journal stored offline — it hit him. <em>Narbexin.</em> A synthetic paralytic once tested in military trials. Banned a decade ago. It caused short-term paralysis and shallow cardiac output, making deaths appear as natural failure — or easier to stage.</p>
+      <p>"Someone drugged him," Akshay whispered. "Then staged the stabbing."</p>
+      <p>At Chandur Bazaar, Akshay posed as a procurement agent from Nagpur. Inside a dim, fan-creaking store, he found a logbook. Line after line of hand-scrawled deliveries. Then:</p>
+      <p><em>NBX-V99 | Delivery signed by: Kedar Bhonsale | Location: N/A — Direct collection</em></p>
+      <p>A name he recognized. One of Bhende's close aides.</p>
+      <p>A man in a black windcheater blocked the doorway, smiling. "We don't like snooping."</p>
+      <p>Akshay bolted through the side door, ducked into a Durga Pandal warehouse, slipped between cloth banners, and hid in silence. He texted one word to Gopal: <em>"Connected."</em></p>
+      <p>Back at the hideout: "Kedar Bhonsale picked up Narbexin under a false order trail. Same compound from Arjun's bloodwork," Akshay said.</p>
+      <p>Then the news on mute: <em>LOCAL MLA'S AIDE FOUND DEAD IN DITCH NEAR DARYAPUR HIGHWAY. Suspected overdose.</em></p>
+      <p>The body on screen — Kedar Bhonsale.</p>
+      <p>"What are the odds," Gopal murmured, "that he dies the day we find him?"</p>
+      <p>"Too neat," Pradnya agreed. "Someone silenced him. Used his own method."</p>
+      <p>Akshay nodded. "The tox screen will list cardiac arrest. But there'll be a small puncture wound on the inside elbow — the same script, the same silence."</p>
+      <p>"But this time," Meera whispered, "it was punishment."</p>
+    `
+  },
+  {
+    id: 6,
+    num: "Chapter 6",
+    title: "Parchi's Gamble",
+    free: false,
+    words: "~1,100 words",
+    content: `
+      <p>It had been two days since anyone had seen Parchi.</p>
+      <p>Gopal paced the dusty floor. "He's not picking up."</p>
+      <p>Akshay checked his phone again. "Last seen — 48 hours ago. He hasn't uploaded anything to the folder."</p>
+      <p>"He wouldn't go off-grid like this," Meera said. "Not without telling someone."</p>
+      <span class="scene-break">48 Hours Earlier — Saraswati Lodge, Room 104</span>
+      <p>Parchi stood in front of a cracked mirror, clean-shaven for the first time in years, wearing a slightly crooked press badge on his kurta: <em>SATVIK DHUMAL — Senior Correspondent, Vidarbha Vision.</em></p>
+      <p>He adjusted his sunglasses and smirked at his reflection. "This is either going to get me a scoop… or get me killed."</p>
+      <p>Within minutes, two Bhende-supporter accounts followed his new Instagram back.</p>
+      <span class="scene-break">The Meeting</span>
+      <p>That night at Hanuman Vyayam Prasarak Mandal grounds, Parchi walked slowly through the north gate. A man stood under the floodlight near the old akhada shed. Jeans. White shirt. Thick moustache. Face smug with that particular brand of power only second-tier thugs wore.</p>
+      <p>"Satvik?" the man asked. Parchi nodded. "Tushar More?"</p>
+      <p>They circled the periphery in silence. Finally, Tushar said, "This story about Kale… and the file leak — it's bad optics."</p>
+      <p>Parchi played along. "Optics is my game. I can flip it."</p>
+      <p>Tushar reached into his sling bag and pulled out a thick envelope. "Fifty up front. Fifty after the next piece runs with our version."</p>
+      <p>Then Tushar leaned in. "You know what we said when we took out Arjun?" Parchi's heart stopped. He kept his voice steady. "Tell me."</p>
+      <p>Tushar looked at the ground, like quoting poetry. "Journalists are pens with legs. Break the legs, the pen stops moving." He looked back at Parchi. "He kept writing. So… we broke more than legs."</p>
+      <p>Parchi's fingers curled. He wanted to hit him. Wanted to scream. Instead, he smiled faintly. "Noted."</p>
+      <span class="scene-break">Back at Saraswati Lodge — Midnight</span>
+      <p>Parchi locked the door, peeled off the wire, and slumped onto the bed. Sweat soaked through his kurta. He played back the audio. The voice was clear. The confession unmistakable.</p>
+      <p>"I got him," he whispered. "I got one of them."</p>
+      <p>Then he saw it — a shadow under the door. And a slow burning scent: plastic and paper. He rushed to the door — no one there. But taped to the floor outside was his press badge, half-scorched. And a note:</p>
+      <p><em>"You picked the wrong name to borrow." — T</em></p>
+    `
+  },
+  {
+    id: 7,
+    num: "Chapter 7",
+    title: "Pradnya's Insight",
+    free: false,
+    words: "~1,000 words",
+    content: `
+      <p>The morning at Pradnya's yoga studio began like every other — incense curling through the air, sunlight slanting gently across the wooden floor, the rhythmic chant of <em>Om Namah Shivaya</em> filling the space.</p>
+      <p>During Shavasana, when silence fell like a shawl across the room, Pradnya noticed the faintest tremble in Kavita Shinde's fingertips. Her breath was shallow. Her lips parted, as if swallowing unshed words.</p>
+      <p>"Are you all right, Kavita?" she asked in Marathi, her voice soft. "You didn't feel centered today."</p>
+      <p>Over tulsi chai, Kavita wrapped her fingers around the clay cup. "It's about my brother. He drove for Bhende-saheb's logistics team. Black Scorpio. Private routes. Mostly night pickups."</p>
+      <p>"Makarand?" Pradnya's breath caught.</p>
+      <p>Kavita nodded. "He's… gone, Tai. Vanished three weeks ago. The week before he disappeared, he started changing. He deleted all his WhatsApp chats. Told me not to open the door for strangers. Once, he came home shivering. Said he was being followed. Said something big was happening — 'parcel drops,' he called them."</p>
+      <p>"Did he tell anyone else?" "No. But he left me this." She pulled out a tiny folded note. In familiar scrawled handwriting: <em>If anything happens, tell Pradnya Tai. She listens.</em></p>
+      <p>The words hit Pradnya in her chest like a prayer recited in reverse.</p>
+      <p>At an overgrown compound behind a broken cricket field boundary, the group found a garage-style depot. Faint chemical scents lingered — sanitiser, latex, something sharper. In a broken locker they found a torn shipment manifest:</p>
+      <p><em>Route 2: Parcel #17, 'Raktanchal' — 01:45 Hrs — Medical Disposal / Red Batch.</em></p>
+      <p>Akshay went pale. "'Red Batch' was a code for expired vaccine trial samples. Dangerous. Should have been incinerated."</p>
+      <p>"And Makarand," Gopal added quietly, "was driving them."</p>
+      <p>That night, Kavita placed a pen drive in Pradnya's hand. "Promise me whatever's on it — you'll use it. Don't be afraid like I was."</p>
+      <p>A single file: <em>makya_lastvoice.m4a.</em> She clicked PLAY.</p>
+      <p>Makarand's voice — low, hurried, scared — filled the room: <em>"Tai… I hope you hear this. They lied. It's not vaccine waste. It's real doses. Red batch. Not expired. Tested. They're giving it to poor workers in the fields. Calling it a 'free health trial.' But there's no paperwork. And no one gets follow-ups. I saw two people collapse. Same day. No ambulance. Just a Scorpio and a cooler box. If you're hearing this, it means they found me. Don't let them use our people like rats."</em></p>
+      <p>Pradnya pressed her hand to her chest. The city outside moved on. But something inside her cracked wide open.</p>
+    `
+  },
+  {
+    id: 8,
+    num: "Chapter 8",
+    title: "Vidhit's Legal Warfare",
+    free: false,
+    words: "~900 words",
+    content: `
+      <p>It was 9:14 a.m. when Vidhit walked into the marble lobby of the Amravati District Civil Court, starched white kurta tucked beneath his lawyer's black coat. In his left hand: a thick file titled: <em>Public Interest Litigation 27A — Against the Purnamai Mall Project.</em></p>
+      <p>He submitted it without ceremony. No grand speeches. Just ink on paper — and enough evidence to send tremors through political walls.</p>
+      <p>By 10:07 a.m., the PIL filing had hit local media. WhatsApp groups lit up. Hashtags spread: <em>#MallScamAmravati | #BhendeLandFraud | #JusticeForArjun</em></p>
+      <p>Then Gopal called. "There are cops at my shop."</p>
+      <p>They had sealed the shutters. Gopal was being investigated for antique smuggling — illegal cultural artifacts planted neatly beneath the register counter.</p>
+      <p>"I've never seen those," Gopal argued. Sergeant Lokhande smirked. "Found on premises. That's all that matters." He waved his hand. "Take him in."</p>
+      <p>Inside Gadge Nagar Police Station, Gopal sat on a cracked wooden bench, silent but furious — until the door creaked open. Vidhit walked in, coat off, sleeves rolled up, expression razor-sharp.</p>
+      <p>"You boys had better get the paperwork ready," he said coolly. "Because this is going to court in one hour."</p>
+      <p>Before the magistrate: "The seizure was conducted without a signed warrant, the station diary entry was timestamped before the search began, and my client has no history of dealing in antiquities."</p>
+      <p>Judge Deshpande adjusted her glasses. "You claim political retaliation?"</p>
+      <p>"I claim evidence tampering, motivated by this morning's PIL. Coincidence is too generous a word."</p>
+      <p>"Release granted. Charges under review."</p>
+      <p>Outside, the media swarmed. "Are you afraid?" Vidhit didn't stop walking. He simply said: "We filed truth this morning. And truth doesn't need a helmet."</p>
+    `
+  },
+  {
+    id: 9,
+    num: "Chapter 9",
+    title: "Trap Set",
+    free: false,
+    words: "~1,000 words",
+    content: `
+      <p>Rain pattered lightly over Amravati's rooftops as Gopal and Meera sat in silence inside Memories &amp; Mithai. Their 'fight' had to be believable.</p>
+      <p>"You should have stayed out of this," Gopal barked, just loud enough for the two idle auto-rickshaw drivers outside to hear.</p>
+      <p>"And you should have stayed a shopkeeper!" Meera snapped back, storming past him with a plastic bag that 'accidentally' slipped open — revealing a silver flash drive before she scooped it up again.</p>
+      <p>She slammed the door. A young boy at the neighbouring paan stall immediately began texting someone.</p>
+      <p>Parchi squinted at his laptop. The image — slightly blurred for effect — showed Gopal handing Vidhit a hard drive in the parking lot outside the courthouse. A moment that never actually happened. Uploaded to a throwaway Telegram channel: <em>"Arjun's original files? Looks like someone just moved them to Advocate Joshi's apartment."</em></p>
+      <p>Parchi grinned. "Let's see how badly they want a ghost."</p>
+      <span class="scene-break">1:52 A.M. | Ganesh Heights, Stairwell C</span>
+      <p>Two men moved like fog — no words, no eye contact. Black gloves. Masked faces. They reached Apartment B4's balcony and picked the lock with precision. Inside, all was dark except for the faint flicker of a nightlight near the Ganpati murti. They didn't notice the blinking red lens in its eye.</p>
+      <p>"There's the drive." "Grab the cloth and let's go."</p>
+      <p>Inspector Salvi whispered: "Let them hold the evidence. We want chain of possession."</p>
+      <p>Floodlights exploded on. "POLICE! DON'T MOVE!"</p>
+      <p>One man dashed toward the balcony. The other reached for the curtain — but Vidhit stepped out of the shadows, holding a cricket bat. "You forgot your warrant."</p>
+      <p>THUD.</p>
+      <p>The first intruder sprinted down the steps — then stopped dead. Gopal, Parchi, and a constable stood at the bottom, flashlight beams blinding him.</p>
+      <p>"You can run," Gopal said. "But you'll be famous tomorrow."</p>
+      <p>Trap. Closed.</p>
+      <p>Salvi looked up. "That's your chain. That's your proof."</p>
+      <p>Vidhit exhaled. "We didn't just catch them. We baited Bhende's war room."</p>
+    `
+  },
+  {
+    id: 10,
+    num: "Chapter 10",
+    title: "Confrontation",
+    free: false,
+    words: "~1,200 words",
+    content: `
+      <p>The sky over Daryapur Road was bruised with thunder. Inside Bhende's old political retreat — a crumbling farmhouse wrapped in bougainvillea and secrets — a single bulb swung above a wooden table.</p>
+      <p>Vidhit wore a lapel mic beneath his collar, wired to a mobile van parked 400 metres away. "Remember," he told the group, "we don't confront him — we let him confess. His arrogance will do the rest."</p>
+      <span class="scene-break">6:34 P.M. — The SUV Arrives</span>
+      <p>MLA Suresh Bhende stepped down, cloaked in white, gold chain glinting, umbrella in hand — though there was no rain. He walked in slowly, smug.</p>
+      <p>"Gentlemen," he said with a dry grin. "And lady. You've caused me quite a mess."</p>
+      <p>He glanced at the drive pouch on the table. "Is that it? The original?"</p>
+      <p>Parchi nodded. "Everything you buried."</p>
+      <p>Bhende chuckled. "You could have asked for money, you know. Or a ministerial post."</p>
+      <p>"You killed a man," Gopal said quietly. "You tried to kill the truth."</p>
+      <p>"No," Bhende said. "I preserved peace. Truth is a luxury. Control is survival."</p>
+      <p>He leaned back, voice growing cold. "Arjun wouldn't stop. He found the Narbexin batches before even I knew we were using them. And then he gave a copy to that clerk. So yes — I cleaned up the mess. I always do."</p>
+      <p>In the catering truck, NewsNirdharit anchor Ananya Kulkarni watched the feed counter climb to three thousand viewers. She turned to her assistant. "Put him everywhere."</p>
+      <p>Vidhit took a step forward. "You just admitted to conspiracy. Murder. Medical malpractice. All on record."</p>
+      <p>Bhende froze. "What record?"</p>
+      <p>Parchi held up his phone. "Say hello to your voters, Saheb." <em>4,211 VIEWERS — and climbing.</em></p>
+      <p>Akshay stepped forward. "Someone who poisons the poor and calls it a health drive." He dropped a manila folder on the table — laminated reports, lab results, an autopsy report from Irwin Hospital, sealed and signed.</p>
+      <p>Pradnya walked to the centre, holding a handwritten file: <em>Deaths Under Silence: 42 Names.</em></p>
+      <p>"Each of these people received what they were told was 'free medical support.' Most of them were migrant workers. Farmers. Temple volunteers." She placed it in front of him. "One of them was my student's brother. His name was Makarand."</p>
+      <p>Bhende backed away. "This country doesn't run on law — it runs on fear. You remove me, someone worse takes my place."</p>
+      <p>Vidhit stepped forward. "Then let them be afraid of justice."</p>
+      <p>Sirens. Flashing blues and reds. Six police jeeps and an ACB van lined Daryapur Road.</p>
+      <p>"Suresh Bhende, you are under arrest for criminal conspiracy, custodial murder, medical fraud, illegal land acquisition, and violation of the Anti-Corruption Act."</p>
+      <p>Bhende lunged at Parchi. "I should have killed you with Arjun!"</p>
+      <p>But before he could reach him, Gopal stepped in. The slap echoed like thunder. Bhende stumbled back, blinking.</p>
+      <p>"You messed with the wrong shopkeeper," Gopal said, steady and unafraid.</p>
+      <p>As Bhende was loaded into the van, the livestream counter hit 11,000 viewers. <em>#BhendeArrested | #JusticeForArjun | #TheLastGift</em></p>
+      <span class="scene-break">Later that Night — The Safehouse</span>
+      <p>Silence. Tea cups on the table. Eyes tired, but spirits full.</p>
+      <p>Parchi sat against the window, finally exhaling. "Do you think it'll last?"</p>
+      <p>Vidhit nodded. "He'll face a courtroom for a while. That's justice, sometimes — not fast, but public."</p>
+      <p>Akshay sipped quietly. "He's not the only one. But he's the first."</p>
+      <p>Gopal smiled faintly. "I guess truth… is a hell of a mithai."</p>
+      <p>They all laughed.</p>
+    `
+  },
+  {
+    id: 11,
+    num: "Epilogue",
+    title: "The Light That Stayed",
+    free: false,
+    words: "~500 words",
+    content: `
+      <p>The fall of Suresh Bhende wasn't just a political collapse — it was an unraveling of fear stitched into the very seams of Amravati.</p>
+      <p>His logistics shell companies were raided. Bank accounts frozen. Associates disappeared into custody or the shadows they once ruled from.</p>
+      <p>The Purnamai Mall Project was officially scrapped — its concrete skeleton now draped in legal red tape, wild grass, and graffiti that read: <em>"Arjun Lives."</em></p>
+      <p>But beneath the headlines, the city did something even more powerful. It remembered.</p>
+      <p>It remembered who stood when everyone else bent. It remembered a group of friends who used chai cups, microphones, yoga mats, and courtroom files to drag corruption into the sunlight.</p>
+      <p>Gopal reopened Memories &amp; Mithai. No ceremony. Just warm lights, fresh laddoos, and the same counter he'd once nearly lost. But now, the shop was more than a business — it was a landmark of resilience. Children pointed it out during rickshaw rides. A small wooden plaque above the counter read: <em>"Truth is best served warm."</em></p>
+      <p>One week before Diwali, the group gathered in the quiet sanctuary of Pradnya's yoga studio. The city hummed in celebration beyond the walls — crackers popped, distant laughter rang, lanterns floated across rooftops.</p>
+      <p>Gopal handed each friend a carefully wrapped parcel. "Handmade," he said. "Clay, not machine. Took me two weeks."</p>
+      <p>They unwrapped them — Diwali diyas, each etched with a single Marathi word:</p>
+      <p><em>Nirbhay</em> — Fearless (Meera)<br/><em>Nyay</em> — Justice (Vidhit)<br/><em>Shraddha</em> — Faith (Pradnya)<br/><em>Satya</em> — Truth (Parchi)<br/><em>Sneha</em> — Friendship (Akshay)</p>
+      <p>"These remind us," Gopal said, voice cracking slightly, "that darkness doesn't go easily. But neither do we."</p>
+      <p>They toasted with chai and besan barfi. They didn't need speeches — just glances, glows, and the weight of everything they'd survived.</p>
+      <p>Outside, the diyas glimmered against the breeze. And somewhere in the city, beneath a lantern-lit sky, another whisper began — a story, a doubt, a wrong waiting to be made right.</p>
+      <p>But for now… In Amravati, even shadows couldn't hide from the light of friendship.</p>
+      <p style="text-align:center; color: var(--gold); font-family: 'Playfair Display', serif; font-size: 18px; margin-top: 32px;">— The End —</p>
+    `
+  }
+];
+
+let currentChapter = 0;
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.Telegram?.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+  }
+  buildChapterList();
+});
+
+function buildChapterList() {
+  const list = document.getElementById('chapterList');
+  list.innerHTML = '';
+  CHAPTERS.forEach((ch, i) => {
+    const el = document.createElement('div');
+    el.className = 'chapter-item' + (ch.free ? '' : ' locked');
+    el.innerHTML = `
+      <div class="chapter-num">${String(i).padStart(2,'0')}</div>
+      <div class="chapter-info">
+        <div class="chapter-name">${ch.title}</div>
+        <div class="chapter-meta">${ch.num} · ${ch.words}</div>
+      </div>
+      <div>${ch.free ? '<span class="free-tag">FREE</span>' : '<span class="ton-tag">0.5 TON</span>'}</div>
+    `;
+    el.onclick = ch.free ? () => openChapter(i) : () => showLocked(i);
+    list.appendChild(el);
+  });
+  const freeCount = CHAPTERS.filter(c => c.free).length;
+  const pct = Math.round((freeCount / CHAPTERS.length) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${freeCount} of ${CHAPTERS.length} unlocked · Free preview`;
+}
+
+function showCover() {
+  hide(['chapters','reader','locked-screen']);
+  show('cover'); scrollTo(0,0);
+}
+function showChapters() {
+  hide(['cover','reader','locked-screen']);
+  show('chapters'); scrollTo(0,0);
+}
+function openChapter(idx) {
+  currentChapter = idx;
+  const ch = CHAPTERS[idx];
+  document.getElementById('readerHeaderTitle').textContent = ch.num;
+  document.getElementById('readerChapterNum').textContent = ch.num;
+  document.getElementById('readerChapterTitle').textContent = ch.title;
+  document.getElementById('readerContent').innerHTML = ch.content;
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  prevBtn.style.display = idx === 0 ? 'none' : 'block';
+  const nextCh = CHAPTERS[idx + 1];
+  if (!nextCh) {
+    nextBtn.textContent = '← Contents';
+    nextBtn.onclick = showChapters;
+  } else if (!nextCh.free) {
+    nextBtn.textContent = '🔐 Next →';
+    nextBtn.onclick = () => showLocked(idx + 1);
+  } else {
+    nextBtn.textContent = 'Next →';
+    nextBtn.onclick = () => navigate(1);
+  }
+  hide(['cover','chapters','locked-screen']);
+  show('reader'); scrollTo(0,0);
+}
+function navigate(dir) {
+  const next = currentChapter + dir;
+  if (next < 0) return showChapters();
+  if (next >= CHAPTERS.length) return showChapters();
+  if (!CHAPTERS[next].free) return showLocked(next);
+  openChapter(next);
+}
+function showLocked(idx) {
+  const ch = CHAPTERS[idx];
+  document.getElementById('lockDesc').textContent = `Unlock "${ch.title}" to continue the Amravati Chronicles.`;
+  hide(['cover','chapters','reader']);
+  document.getElementById('locked-screen').style.display = 'flex';
+  scrollTo(0,0);
+}
+function handleTonPay() {
+  alert('TON payments coming soon!\n\nFollow @amravatichronicles_bot on Telegram to be notified the moment payments go live.');
+}
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hide(ids) { ids.forEach(id => { document.getElementById(id).style.display = 'none'; }); }
+</script>
+</body>
+</html>
